@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "server": "nodemon server.js",
-    "start": "node server.js"
+    "start": "NODE_ENV = production node server.js"
   },
   "type": "module",
   "keywords": [],
@@ -12,7 +12,7 @@
   "license": "ISC",
   "description": "Backend development using node, mongodb and prisma",
   "dependencies": {
-    "@prisma/client": "^5.16.2",
+    "@prisma/client": "^5.17.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -21,6 +21,6 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "prisma": "^5.16.2"
+    "prisma": "^5.17.0"
   }
 }

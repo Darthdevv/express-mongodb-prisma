@@ -2,7 +2,7 @@ import { catchAsync } from "../helpers/catchAsync.js"
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import appError from "../utilities/appError.js";
-import {prisma} from '../config/prismaConfig.js'
+import { prisma } from '../config/prismaConfig.js'
 
 
 export const signUp = catchAsync(async (req, res, next) => {
@@ -55,3 +55,25 @@ export const signUp = catchAsync(async (req, res, next) => {
 });
 
 export const signIn = catchAsync(async (req, res, next) => { });
+
+export const getUsers = catchAsync(async (req, res, next) => {
+
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  if (!users) {
+    return next(new appError("No Users Found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    requestedAt: req.requestTime,
+    results: users.length,
+    data: { users },
+  });
+});

@@ -54,7 +54,39 @@ export const signUp = catchAsync(async (req, res, next) => {
     .json({ message: `New user ${user.email} is registered`, data: user });
 });
 
-export const signIn = catchAsync(async (req, res, next) => { });
+export const signIn = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new appError("Fill in all fields.", 400));
+  }
+
+  const lowerCaseEmail = email.toLowerCase();
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: lowerCaseEmail,
+    },
+  });
+
+  if (!user) {
+    return next(new appError("User Not Found.", 404));
+  }
+
+  const comparePasswords = bcrypt.compare(password, user.password);
+
+  if (!comparePasswords) {
+    return next(new appError("Invalid Password.", 400));
+  }
+
+  const { id, name } = user;
+
+  const token = jwt.sign({ id, name }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "1d",
+  });
+
+  res.status(200).json({ token, id, name });
+});
 
 export const getUsers = catchAsync(async (req, res, next) => {
 

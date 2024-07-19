@@ -109,3 +109,30 @@ export const getUsers = catchAsync(async (req, res, next) => {
     data: { users },
   });
 });
+
+
+export const getSpecificUser = catchAsync(async (req, res, next) => {
+
+  const { id } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  if (!user) {
+    return next(new appError('No User Found', 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    requestedAt: req.requestTime,
+    data: { user },
+  });
+})

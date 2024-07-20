@@ -73,7 +73,7 @@ export const signIn = catchAsync(async (req, res, next) => {
     return next(new appError("User Not Found.", 404));
   }
 
-  const comparePasswords = bcrypt.compare(password, user.password);
+  const comparePasswords = await bcrypt.compare(password, user.password);
 
   if (!comparePasswords) {
     return next(new appError("Invalid Password.", 400));
@@ -135,4 +135,88 @@ export const getSpecificUser = catchAsync(async (req, res, next) => {
     requestedAt: req.requestTime,
     data: { user },
   });
+})
+
+
+export const updateUser = catchAsync(async (req, res, next) => {
+
+  const { id } = req.params;
+
+  const {
+    name,
+    email,
+    currentPassword,
+    newPassword
+  } = req.body;
+
+  if (
+    !name ||
+    !email ||
+    !currentPassword ||
+    !newPassword
+  ) {
+    return res.status(400).json("please fill all fields");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!user) {
+    return next(new appError("No User Found", 404));
+  }
+
+  const lowerCaseEmail = email.toLowerCase();
+
+  const doesEmailExist = await prisma.user.findUnique({
+    where: {
+      email: lowerCaseEmail,
+    },
+  });
+
+  if (doesEmailExist && doesEmailExist.id != req.user.id) return next(new appError("email already exists", 409));
+
+  const validateUserPassword = await bcrypt.compare(
+    currentPassword,
+    user.password
+  );
+  if (!validateUserPassword) {
+    return next(new appError("Invalid current password.", 400));
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const newHashedPassword = await bcrypt.hash(newPassword, salt);
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id,
+    },
+    data: {
+      name,
+      email,
+      password: newHashedPassword,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  res.status(200).send(updatedUser);
+})
+
+export const deleteUser = catchAsync(async (req, res, next) => {
+
+  const { id } = req.params;
+
+  await prisma.user.delete({
+    where: {
+      id,
+    },
+  });
+
+  res.status(204).json({ message: 'User deleted successfully' });
 })
